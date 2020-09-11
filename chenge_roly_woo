@@ -1,0 +1,45 @@
+
+/*Просто при покупке меняем роль с кастомера на пользоватвеля*/
+function wpa_120656_convert_paying_customer( $order_id ) {
+
+    $order = new WC_Order( $order_id );
+
+    if ( $order->user_id > 0 ) {
+        update_user_meta( $order->user_id, 'paying_customer', 1 );
+        $user = new WP_User( $order->user_id );
+
+        // Remove role
+        $user->remove_role( 'customer' ); 
+
+        // Add role
+        $user->add_role( 'subscriber' );
+    }
+}
+add_action( 'woocommerce_order_status_completed', 'wpa_120656_convert_paying_customer' );
+
+
+//*Меняем роли в зависимости от купленного товара*//
+add_action('woocommerce_thankyou', 'change_user_role_on_order_success');
+function change_user_role_on_order_success($order_id ) {
+$order = new WC_Order( $order_id );
+$user_id = $order->user_id;
+$wp_user_object = new WP_User($user_id);
+$items = $order->get_items();
+foreach ( $items as $item ) {
+$product_name = $item['name'];
+$product_id = $item['product_id'];
+$product_variation_id = $item['variation_id'];
+}
+if ( $product_id == '999' && $wp_user_object->roles[0] != "administrator"){ // Не исправлять админа!
+wp_update_user( array( 'ID' => $wp_user_object->ID, 'role' => "my-role" ) );
+} else
+if ( $product_id == '777' && $wp_user_object->roles[0] != "administrator"){ // Не исправлять админа!
+wp_update_user( array( 'ID' => $wp_user_object->ID, 'role' => "my-role2" ) );
+}
+}
+
+
+Как вы можете видеть в коде, пользователи получат роль my-role, 
+если они покупают продукт id 999, и они получают роль пользователя
+my-role2, когда они покупают продукт id 777. Заменяйте на нужный. У 
+меня данный код функционирует. Разместить в function.php вашей темы.
